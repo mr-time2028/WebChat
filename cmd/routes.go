@@ -14,7 +14,7 @@ func routes() http.Handler {
 	mux.Get("/ws", http.HandlerFunc(handlers.WsEndpoint))
 
 	fileServer := http.FileServer(http.Dir("./web/static/"))
-	mux.Handle("/web/static/*", http.StripPrefix("/static", fileServer))
+	mux.Handle("/web/static/*", http.StripPrefix("/web/static", fileServer))
 
 	return mux
 }
