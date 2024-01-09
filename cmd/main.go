@@ -4,24 +4,26 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/mr-time2028/WebChat/server/config"
 )
 
-func main() {
-	cfg := &Config{
-		Port: 8000,
-	}
+var cfg *config.Config
 
-	err := cfg.serve()
+func main() {
+	err := serve()
 	if err != nil {
 		log.Panic("failed to start application", err)
 	}
 }
 
+func serve() error {
+	cfg = &config.Config{
+		Port: 8000,
+	}
 
-func (cfg *Config) serve() error {
-	routes := routes()
 	log.Println("application running on port", cfg.Port)
-	err := http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), routes)
+	err := http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), routes())
 	if err != nil {
 		return err
 	}
