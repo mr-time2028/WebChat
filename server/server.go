@@ -1,19 +1,22 @@
 package server
 
 import (
+	"net/http"
+
 	"github.com/gorilla/websocket"
 )
 
 // Client contains websocket connection instance for each user
 type Client struct {
-	conn *websocket.Conn
+	*websocket.Conn
 }
 
-// clients = make(chan[*WebSocketConnection]string)
+var Clients = make(map[Client]string)
 
 var UpgradeConnection = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
+	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
 // WsRequest contains what the clients send to the server
