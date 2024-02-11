@@ -1,33 +1,44 @@
 package server
 
 import (
+	"fmt"
+	"github.com/mr-time2028/WebChat/apps/user"
+	"github.com/mr-time2028/WebChat/apps/websocket"
+	"github.com/mr-time2028/WebChat/database"
+	"github.com/mr-time2028/WebChat/models"
+	"github.com/mr-time2028/WebChat/routes"
+	"github.com/mr-time2028/WebChat/server/config"
+	"log"
 	"net/http"
-
-	"github.com/gorilla/websocket"
 )
 
-// Client contains websocket connection instance for each user
-type Client struct {
-	*websocket.Conn
-}
+var cfg *config.Config
 
-var Clients = make(map[Client]string)
+func HTTPServer() error {
+	cfg = config.NewConfig()
 
-var UpgradeConnection = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin:     func(r *http.Request) bool { return true },
-}
+	// connect to the database
+	log.Println("connecting to the database...")
+	DB, err := database.ConnectSQL()
+	if err != nil {
+		log.Fatal("connecting to the database failed! ", err)
+	}
+	log.Println("connected to the database successfully!")
+	cfg.DB = DB
 
-// WsRequest contains what the clients send to the server
-type WsRequest struct {
-	Action         string   `json:"action"`
-	Message        string   `json:"message"`
-	ConnectedUsers []string `json:"connected_users"`
-}
+	// initial clients config
+	cfg.Clients = make(map[models.Client]string)
 
-// WsResponse contains what the server sends to the clients
-type WsResponse struct {
-	Action  string `json:"action"`
-	Message string `json:"message"`
+	// register handlers
+	user.RegisterHandlersConfig(cfg)
+	websocket.RegisterHandlersConfig(cfg)
+
+	// start application
+	log.Println("application running on port", cfg.HTTPPort)
+	err = http.ListenAndServe(fmt.Sprintf(":%s", cfg.HTTPPort), routes.Routes())
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

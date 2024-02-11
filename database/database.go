@@ -13,8 +13,8 @@ import (
 
 // DB contains sql and nosql dbs
 type DB struct {
-	GormDB    *gorm.DB
-	SqlDB     *sql.DB
+	GormDB *gorm.DB
+	SqlDB  *sql.DB
 }
 
 const maxOpenDBConn = 10
@@ -23,13 +23,13 @@ const maxDBLifetime = 5 * time.Minute
 
 // getDSN return dsn string for connection to the database
 func getDSN() string {
-	dbName := helpers.GetEnvOrDefaultString("DB_NAME", "")
-	dbUser := helpers.GetEnvOrDefaultString("DB_USER", "")
-	dbPass := helpers.GetEnvOrDefaultString("DB_PASS", "")
-	dbHost := helpers.GetEnvOrDefaultString("DB_HOST", "localhost")
-	dbPort := helpers.GetEnvOrDefaultString("DB_PORT", "5432")
-	dbSSL := helpers.GetEnvOrDefaultString("DB_SSL", "disable")
-	dbZone := helpers.GetEnvOrDefaultString("DB_ZONE", "Asia/Tehran")
+	dbName := helpers.GetEnvOrDefaultString("POSTGRES_NAME", "")
+	dbUser := helpers.GetEnvOrDefaultString("POSTGRES_USER", "")
+	dbPass := helpers.GetEnvOrDefaultString("POSTGRES_PASSWORD", "")
+	dbHost := helpers.GetEnvOrDefaultString("POSTGRES_HOST", "localhost")
+	dbPort := helpers.GetEnvOrDefaultString("POSTGRES_PORT", "5432")
+	dbSSL := helpers.GetEnvOrDefaultString("POSTGRES_SSL", "disable")
+	dbZone := helpers.GetEnvOrDefaultString("POSTGRES_ZONE", "Asia/Tehran")
 
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=%s",
 		dbHost, dbUser, dbPass, dbName, dbPort, dbSSL, dbZone)
