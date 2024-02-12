@@ -18,7 +18,7 @@ type UserRoom struct {
 	User   User      `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE;not null" json:"user"`
 	RoomID uuid.UUID `gorm:"not null" json:"-"`
 	Room   Room      `gorm:"foreignKey:RoomID;constraint:OnDelete:CASCADE;not null" json:"room"`
-	Role   UserRole  `gorm:"not null" json:"role"` // if more than one role, so need a user_room_role model
+	Role   UserRole  `gorm:"size:1;not null" json:"role"` // if more than one role, so need a user_room_role model
 }
 
 func (u *UserRoom) BeforeCreate(tx *gorm.DB) error {

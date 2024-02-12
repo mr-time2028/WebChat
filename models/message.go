@@ -11,5 +11,5 @@ type Message struct {
 	Sender   User        `gorm:"foreignKey:SenderID;constraint:OnDelete:CASCADE;not null" json:"sender"`
 	RoomID   pgtype.UUID `gorm:"not null" json:"-"`
 	Room     Room        `gorm:"foreignKey:RoomID;constraint:OnDelete:CASCADE;not null" json:"room"`
-	Content  string      `gorm:"not null" json:"content"`
+	Content  string      `gorm:"size:5000;not null" json:"content"`
 }

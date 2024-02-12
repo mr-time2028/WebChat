@@ -7,15 +7,15 @@ import (
 	"github.com/mr-time2028/WebChat/database"
 	"github.com/mr-time2028/WebChat/models"
 	"github.com/mr-time2028/WebChat/routes"
-	"github.com/mr-time2028/WebChat/server/config"
+	"github.com/mr-time2028/WebChat/server/settings"
 	"log"
 	"net/http"
 )
 
-var cfg *config.Config
+var app *settings.App
 
 func HTTPServer() error {
-	cfg = config.NewConfig()
+	app = settings.NewApp()
 
 	// connect to the database
 	log.Println("connecting to the database...")
@@ -24,18 +24,22 @@ func HTTPServer() error {
 		log.Fatal("connecting to the database failed! ", err)
 	}
 	log.Println("connected to the database successfully!")
-	cfg.DB = DB
+	app.DB = DB
 
-	// initial clients config
-	cfg.Clients = make(map[models.Client]string)
+	// initial clients settings
+	app.Clients = make(map[models.Client]string)
+
+	// initial models
+	app.Models = models.NewModels()
 
 	// register handlers
-	user.RegisterHandlersConfig(cfg)
-	websocket.RegisterHandlersConfig(cfg)
+	user.RegisterHandlersConfig(app)
+	websocket.RegisterHandlersConfig(app)
+	models.RegisterModelsConfig(DB)
 
 	// start application
-	log.Println("application running on port", cfg.HTTPPort)
-	err = http.ListenAndServe(fmt.Sprintf(":%s", cfg.HTTPPort), routes.Routes())
+	log.Println("application running on port", app.HTTPPort)
+	err = http.ListenAndServe(fmt.Sprintf(":%s", app.HTTPPort), routes.Routes())
 	if err != nil {
 		return err
 	}

@@ -1,4 +1,4 @@
-package config
+package settings
 
 import (
 	"github.com/mr-time2028/WebChat/database"
@@ -6,19 +6,20 @@ import (
 	"github.com/mr-time2028/WebChat/models"
 )
 
-type Config struct {
+type App struct {
 	Domain   string
 	Debug    bool
 	HTTPPort string
 	DB       *database.DB
 	Clients  map[models.Client]string
+	Models   *models.ModelManager
 }
 
-func NewConfig() *Config {
+func NewApp() *App {
 	HTTPPort := helpers.GetEnvOrDefaultString("HTTP_PORT", "8000")
 	Domain := helpers.GetEnvOrDefaultString("DOMAIN", "localhost")
 	Debug := helpers.GetEnvOrDefaultBool("DEBUG", true)
-	return &Config{
+	return &App{
 		HTTPPort: HTTPPort,
 		Domain:   Domain,
 		Debug:    Debug,

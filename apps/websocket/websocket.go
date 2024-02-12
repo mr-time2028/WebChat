@@ -1,11 +1,11 @@
 package websocket
 
 import (
-	"github.com/mr-time2028/WebChat/server/config"
+	"github.com/mr-time2028/WebChat/server/settings"
 )
 
-var cfg *config.Config
+var app *settings.App
 
-func RegisterHandlersConfig(c *config.Config) {
-	cfg = c
+func RegisterHandlersConfig(a *settings.App) {
+	app = a
 }

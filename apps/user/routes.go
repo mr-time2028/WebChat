@@ -7,5 +7,8 @@ import (
 
 func Routes() http.Handler {
 	mux := chi.NewRouter()
+
+	mux.Post("/register", register)
+
 	return mux
 }

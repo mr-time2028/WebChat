@@ -2,6 +2,8 @@ package helpers
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/mr-time2028/WebChat/validators"
@@ -41,7 +43,7 @@ func WriteJSON(w http.ResponseWriter, status int, data interface{}, headers ...h
 }
 
 // ErrorMapJSON write an error map message as a json to the output
-func ErrorMapJSON(w http.ResponseWriter, error validators.Errors) {
+func ErrorMapJSON(w http.ResponseWriter, error validators.Errors) error {
 	// {
 	//		"error": true
 	// 		"message": {
@@ -67,18 +69,19 @@ func ErrorMapJSON(w http.ResponseWriter, error validators.Errors) {
 	statusCode = error.Code
 
 	if statusCode == http.StatusInternalServerError {
-		http.Error(w, "internal server error", http.StatusInternalServerError)
-		return
+		return errors.New(fmt.Sprintf("%v: ", payload.Message))
 	}
 
 	err := WriteJSON(w, statusCode, payload)
 	if err != nil {
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return err
 	}
+
+	return nil
 }
 
 // ErrorStrJSON write a str error message as a json to the output
-func ErrorStrJSON(w http.ResponseWriter, error error, status ...int) {
+func ErrorStrJSON(w http.ResponseWriter, error error, status ...int) error {
 	// {
 	//		"error": true,
 	//    	"message": "some error"
@@ -99,6 +102,8 @@ func ErrorStrJSON(w http.ResponseWriter, error error, status ...int) {
 
 	err := WriteJSON(w, statusCode, payload)
 	if err != nil {
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return err
 	}
+
+	return nil
 }

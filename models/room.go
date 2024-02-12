@@ -9,9 +9,9 @@ import (
 type Room struct {
 	gorm.Model
 	ID         uuid.UUID `gorm:"primaryKey;type:uuid;default:uuid_generate_v4()" json:"id"`
-	Name       string    `gorm:"not null" json:"name"`
-	Identifier string    `gorm:"not null" json:"identifier"`
-	Password   string    `gorm:"not null" json:"password"`
+	Name       string    `gorm:"size:255;not null" json:"name"`
+	Identifier string    `gorm:"size:36;not null" json:"identifier"`
+	Password   string    `gorm:"size:60;not null" json:"password"`
 }
 
 func (r *Room) BeforeCreate(tx *gorm.DB) error {

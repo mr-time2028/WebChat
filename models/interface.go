@@ -1,6 +1,10 @@
 package models
 
+import "github.com/google/uuid"
+
 type UserInterface interface {
+	InsertOneUser(user *User) (uuid.UUID, error)
+	CheckIfExistsUser(username string) (bool, error)
 }
 
 type RoomInterface interface {

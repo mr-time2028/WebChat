@@ -4,6 +4,6 @@ import "gorm.io/gorm"
 
 type Permission struct {
 	gorm.Model
-	Name        string `gorm:"uniqueIndex;not null" json:"name"`
-	Description string `json:"description"`
+	Name        string `gorm:"size:255;uniqueIndex;not null" json:"name"`
+	Description string `json:"size:1024;description"`
 }

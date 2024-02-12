@@ -1,22 +1,21 @@
 package websocket
 
 import (
-	"errors"
-	"github.com/mr-time2028/WebChat/helpers"
 	"github.com/mr-time2028/WebChat/models"
 	"github.com/mr-time2028/WebChat/web/render"
 	"log"
 	"net/http"
 )
 
-func Home(w http.ResponseWriter, r *http.Request) {
+func home(w http.ResponseWriter, r *http.Request) {
 	render.Template(w, r, "index_page.html", &render.TemplateData{})
 }
 
-func WsEndpoint(w http.ResponseWriter, r *http.Request) {
+func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 	ws, err := models.UpgradeConnection.Upgrade(w, r, nil)
 	if err != nil {
-		helpers.ErrorStrJSON(w, errors.New("internal server error"), http.StatusInternalServerError)
+		log.Println(err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -24,7 +23,7 @@ func WsEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	// default username for each new connected user is ""
 	// TODO: we should handle it with session (decide front side or back side)
-	cfg.Clients[models.Client{Conn: ws}] = ""
+	app.Clients[models.Client{Conn: ws}] = ""
 
 	go listenForWs()
 }

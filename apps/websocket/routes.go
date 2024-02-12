@@ -8,8 +8,8 @@ import (
 func Routes() http.Handler {
 	mux := chi.NewRouter()
 
-	mux.Get("/", http.HandlerFunc(Home))
-	mux.Get("/ws", http.HandlerFunc(WsEndpoint))
+	mux.Get("/", home)
+	mux.Get("/ws", wsEndpoint)
 
 	return mux
 }
