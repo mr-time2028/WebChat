@@ -10,7 +10,7 @@ services:
       - postgres-data:/var/lib/data/postgresql
     restart: always
     env_file:
-      - .env
+      - ../.env
 
 volumes:
   postgres-data:

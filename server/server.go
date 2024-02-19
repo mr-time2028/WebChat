@@ -2,9 +2,8 @@ package server
 
 import (
 	"fmt"
-	"github.com/mr-time2028/WebChat/apps/user"
-	"github.com/mr-time2028/WebChat/apps/websocket"
 	"github.com/mr-time2028/WebChat/database"
+	"github.com/mr-time2028/WebChat/handlers"
 	"github.com/mr-time2028/WebChat/models"
 	"github.com/mr-time2028/WebChat/routes"
 	"github.com/mr-time2028/WebChat/server/settings"
@@ -30,12 +29,12 @@ func HTTPServer() error {
 	app.Clients = make(map[models.Client]string)
 
 	// initial models
+	models.RegisterModelsConfig(DB)
 	app.Models = models.NewModels()
 
-	// register handlers
-	user.RegisterHandlersConfig(app)
-	websocket.RegisterHandlersConfig(app)
-	models.RegisterModelsConfig(DB)
+	// initial handlers
+	handlerRepo := handlers.NewHandlerRepository(app)
+	handlers.NewHandlers(handlerRepo)
 
 	// start application
 	log.Println("application running on port", app.HTTPPort)

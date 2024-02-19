@@ -1,4 +1,4 @@
-package user
+package handlers
 
 import (
 	"errors"
@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-func register(w http.ResponseWriter, r *http.Request) {
+func (h *HandlerRepository) Register(w http.ResponseWriter, r *http.Request) {
 	var requestBody struct {
 		Username        string `json:"username" required:"true" min:"5" max:"255"`
 		Password        string `json:"password" required:"true" min:"8" max:"30"`
@@ -45,7 +45,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if user with this information already exists
-	isExistsUser, err := app.Models.User.CheckIfExistsUser(requestBody.Username)
+	isExistsUser, err := h.App.Models.User.CheckIfExistsUser(requestBody.Username)
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)
@@ -67,7 +67,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 		IsActive: true, // TODO: account confirmation
 	}
 
-	_, err = app.Models.User.InsertOneUser(user)
+	_, err = h.App.Models.User.InsertOneUser(user)
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)

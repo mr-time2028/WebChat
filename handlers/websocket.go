@@ -1,4 +1,4 @@
-package websocket
+package handlers
 
 import (
 	"github.com/mr-time2028/WebChat/models"
@@ -7,11 +7,11 @@ import (
 	"net/http"
 )
 
-func home(w http.ResponseWriter, r *http.Request) {
+func (h *HandlerRepository) Home(w http.ResponseWriter, r *http.Request) {
 	render.Template(w, r, "index_page.html", &render.TemplateData{})
 }
 
-func wsEndpoint(w http.ResponseWriter, r *http.Request) {
+func (h *HandlerRepository) WsEndpoint(w http.ResponseWriter, r *http.Request) {
 	ws, err := models.UpgradeConnection.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
@@ -23,12 +23,12 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	// default username for each new connected user is ""
 	// TODO: we should handle it with session (decide front side or back side)
-	app.Clients[models.Client{Conn: ws}] = ""
+	h.App.Clients[models.Client{Conn: ws}] = ""
 
-	go listenForWs()
+	go h.ListenForWs()
 }
 
-func listenForWs() {
+func (h *HandlerRepository) ListenForWs() {
 	// TODO: should log it to mongo or write to a file
 	defer func() {
 		if r := recover(); r != nil {
