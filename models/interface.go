@@ -5,6 +5,7 @@ import "github.com/google/uuid"
 type UserInterface interface {
 	InsertOneUser(user *User) (uuid.UUID, error)
 	CheckIfExistsUser(username string) (bool, error)
+	GetOneUser(username string) (*User, error)
 }
 
 type RoomInterface interface {

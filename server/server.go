@@ -25,6 +25,10 @@ func HTTPServer() error {
 	log.Println("connected to the database successfully!")
 	app.DB = DB
 
+	// initial JWT
+	auth := models.NewJWTAuth()
+	app.Auth = auth
+
 	// initial clients settings
 	app.Clients = make(map[models.Client]string)
 

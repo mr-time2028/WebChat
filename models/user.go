@@ -31,7 +31,6 @@ func (u *User) InsertOneUser(user *User) (uuid.UUID, error) {
 	if result.Error != nil {
 		return uuid.UUID{}, result.Error
 	}
-
 	return user.ID, nil
 }
 
@@ -47,4 +46,14 @@ func (u *User) CheckIfExistsUser(username string) (bool, error) {
 		return false, result.Error
 	}
 	return true, nil
+}
+
+func (u *User) GetOneUser(username string) (*User, error) {
+	var user *User
+	condition := User{Username: username}
+	result := db.GormDB.Where(condition).First(&user)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return user, nil
 }

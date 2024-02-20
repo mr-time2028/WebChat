@@ -13,6 +13,7 @@ type App struct {
 	DB       *database.DB
 	Clients  map[models.Client]string
 	Models   *models.ModelManager
+	Auth     *models.Auth
 }
 
 func NewApp() *App {

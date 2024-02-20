@@ -2,9 +2,11 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"github.com/mr-time2028/WebChat/helpers"
 	"github.com/mr-time2028/WebChat/models"
 	"github.com/mr-time2028/WebChat/validators"
+	"gorm.io/gorm"
 	"log"
 	"net/http"
 )
@@ -74,9 +76,80 @@ func (h *HandlerRepository) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// write tokens to the output
+	// write successful registration message
 	responseBody.Error = false
 	responseBody.Message = "registration was successful"
+	if err = helpers.WriteJSON(w, http.StatusOK, responseBody); err != nil {
+		log.Println(err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h *HandlerRepository) Login(w http.ResponseWriter, r *http.Request) {
+	var requestBody struct {
+		Username string `json:"username" required:"true"`
+		Password string `json:"password" required:"true"`
+	}
+
+	var responseBody struct {
+		Error  bool              `json:"error"`
+		Tokens models.TokenPairs `json:"tokens"`
+	}
+
+	// get user data and json validation
+	if validator := helpers.ReadJSON(w, r, &requestBody); !validator.Valid() {
+		if err := helpers.ErrorMapJSON(w, validator.Errors); err != nil {
+			log.Println(err)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	// get user with username
+	user, err := h.App.Models.User.GetOneUser(requestBody.Username)
+	if err != nil {
+		switch err {
+		case gorm.ErrRecordNotFound:
+			if err = helpers.ErrorStrJSON(w, errors.New("incorrect email or password"), http.StatusUnauthorized); err != nil {
+				http.Error(w, "internal server error", http.StatusInternalServerError)
+			}
+		default:
+			log.Println(err)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	// check password
+	validator := validators.New()
+	validator.PasswordMatchesHashValidation(user.Password, requestBody.Password)
+	if !validator.Valid() {
+		if err = helpers.ErrorStrJSON(w, errors.New("incorrect email or password"), validator.Errors.Code); err != nil {
+			log.Println(err)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	// generate tokens for user
+	uuidValue, err := user.ID.Value()
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+	u := models.JwtUser{ID: fmt.Sprintf("%v", uuidValue), Username: user.Username}
+	tokens, err := h.App.Auth.GenerateTokenPair(&u)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	// write tokens to the output
+	responseBody.Error = false
+	responseBody.Tokens = tokens
 	if err = helpers.WriteJSON(w, http.StatusOK, responseBody); err != nil {
 		log.Println(err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)

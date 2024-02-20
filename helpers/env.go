@@ -26,3 +26,16 @@ func GetEnvOrDefaultBool(key string, defaultValue bool) bool {
 	}
 	return boolVal
 }
+
+// GetEnvOrDefaultInt read int data from env file
+func GetEnvOrDefaultInt(key string, defaultValue int) int {
+	value := os.Getenv(key)
+	if value == "" {
+		return defaultValue
+	}
+	intVal, err := strconv.Atoi(value)
+	if err != nil {
+		return defaultValue
+	}
+	return intVal
+}
