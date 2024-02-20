@@ -15,7 +15,7 @@ func migrate() {
 		log.Fatal("cannot connect to the database: ", err)
 	}
 
-	models := models.NewModels()
+	models := models.NewModelManager()
 	modelsValue := reflect.ValueOf(*models)
 	for i := 0; i < modelsValue.NumField(); i++ {
 		field := modelsValue.Field(i)

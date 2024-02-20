@@ -4,8 +4,18 @@ import (
 	"github.com/mr-time2028/WebChat/database"
 )
 
-var db *database.DB
+var ModelRepo *ModelRepository
 
-func RegisterModelsConfig(d *database.DB) {
-	db = d
+type ModelRepository struct {
+	db *database.DB
+}
+
+func NewModelsRepository(d *database.DB) *ModelRepository {
+	return &ModelRepository{
+		db: d,
+	}
+}
+
+func NewModels(r *ModelRepository) {
+	ModelRepo = r
 }

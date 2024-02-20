@@ -22,7 +22,7 @@ func main() {
 	if *command {
 		commands.RunCommands()
 	} else {
-		err := server.HTTPServer()
+		err = server.HTTPServer()
 		if err != nil {
 			log.Panic("failed to start application", err)
 		}

@@ -33,8 +33,9 @@ func HTTPServer() error {
 	app.Clients = make(map[models.Client]string)
 
 	// initial models
-	models.RegisterModelsConfig(DB)
-	app.Models = models.NewModels()
+	modelRepo := models.NewModelsRepository(DB)
+	models.NewModels(modelRepo)
+	app.Models = models.NewModelManager()
 
 	// initial handlers
 	handlerRepo := handlers.NewHandlerRepository(app)

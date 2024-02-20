@@ -1,11 +1,15 @@
 package models
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+	"log"
+	"reflect"
+)
 
 type UserInterface interface {
 	InsertOneUser(user *User) (uuid.UUID, error)
 	CheckIfExistsUser(username string) (bool, error)
-	GetOneUser(username string) (*User, error)
+	GetUserByUsername(username string) (*User, error)
 }
 
 type RoomInterface interface {
@@ -36,7 +40,7 @@ type ModelManager struct {
 	UserRoomPermission UserRoomPermissionInterface
 }
 
-func NewModels() *ModelManager {
+func NewModelManager() *ModelManager {
 	return &ModelManager{
 		User:               &User{},
 		Room:               &Room{},
@@ -46,4 +50,20 @@ func NewModels() *ModelManager {
 		MessageReceiver:    &MessageReceiver{},
 		UserRoomPermission: &UserRoomPermission{},
 	}
+}
+
+func AutoMigration() error {
+	models := NewModelManager()
+	modelsValue := reflect.ValueOf(*models)
+	for i := 0; i < modelsValue.NumField(); i++ {
+		field := modelsValue.Field(i)
+		if field.Kind() == reflect.Interface {
+			model := field.Interface()
+			if err := ModelRepo.db.GormDB.AutoMigrate(model); err != nil {
+				log.Fatal("error while migration: ", err)
+			}
+		}
+	}
+
+	return nil
 }

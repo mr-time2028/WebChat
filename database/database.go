@@ -49,8 +49,8 @@ func openDB(dsn string) (*gorm.DB, error) {
 	return db, err
 }
 
-// testDB ping to the database to ensure database is open
-func testDB(d *sql.DB) error {
+// pingDB ping to the database to ensure database is open
+func pingDB(d *sql.DB) error {
 	err := d.Ping()
 	if err != nil {
 		return err
@@ -75,7 +75,12 @@ func ConnectSQL() (*DB, error) {
 	sdb.SetMaxIdleConns(maxIdleDBConn)
 	sdb.SetConnMaxLifetime(maxDBLifetime)
 
-	err = testDB(sdb)
+	err = pingDB(sdb)
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.Exec("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";").Error
 	if err != nil {
 		return nil, err
 	}
@@ -84,4 +89,59 @@ func ConnectSQL() (*DB, error) {
 		GormDB: db,
 		SqlDB:  sdb,
 	}, nil
+}
+
+func ConnectTestSQL() (*DB, error) {
+	testDBName := helpers.GetEnvOrDefaultString("TEST_POSTGRES_NAME", "")
+	testDBUser := helpers.GetEnvOrDefaultString("TEST_POSTGRES_USER", "")
+	testDBPass := helpers.GetEnvOrDefaultString("TEST_POSTGRES_PASSWORD", "")
+	testDBHost := helpers.GetEnvOrDefaultString("TEST_POSTGRES_HOST", "localhost")
+	testDBPort := helpers.GetEnvOrDefaultString("TEST_POSTGRES_PORT", "5432")
+	testDBSSL := helpers.GetEnvOrDefaultString("TEST_POSTGRES_SSL", "disable")
+	testDBZone := helpers.GetEnvOrDefaultString("TEST_POSTGRES_ZONE", "Asia/Tehran")
+
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=%s",
+		testDBHost, testDBUser, testDBPass, testDBName, testDBPort, testDBSSL, testDBZone)
+
+	db, _ := gorm.Open(postgres.Open(dsn), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Silent),
+	})
+
+	sdb, _ := db.DB()
+
+	err := db.Exec("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";").Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &DB{
+		GormDB: db,
+		SqlDB:  sdb,
+	}, nil
+}
+
+// GetAllTables gather all tables name that exists in the database
+func (db *DB) GetAllTables() ([]string, error) {
+	tables, err := db.GormDB.Migrator().GetTables()
+	if err != nil {
+		return nil, err
+	}
+
+	return tables, nil
+}
+
+// DropAllTables drop all tables in the database
+func (db *DB) DropAllTables() error {
+	tables, err := db.GetAllTables()
+	if err != nil {
+		return err
+	}
+
+	for _, table := range tables {
+		if err = db.GormDB.Migrator().DropTable(table); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

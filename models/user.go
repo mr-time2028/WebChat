@@ -27,9 +27,9 @@ func (u *User) BeforeCreate(tx *gorm.DB) error {
 
 // InsertOneUser insert one user to the database
 func (u *User) InsertOneUser(user *User) (uuid.UUID, error) {
-	result := db.GormDB.Create(user)
+	result := ModelRepo.db.GormDB.Create(user)
 	if result.Error != nil {
-		return uuid.UUID{}, result.Error
+		return uuid.Nil, result.Error
 	}
 	return user.ID, nil
 }
@@ -38,7 +38,7 @@ func (u *User) InsertOneUser(user *User) (uuid.UUID, error) {
 func (u *User) CheckIfExistsUser(username string) (bool, error) {
 	var user *User
 	condition := User{Username: username}
-	result := db.GormDB.Where(condition).First(&user)
+	result := ModelRepo.db.GormDB.Where(condition).First(&user)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return false, nil
@@ -48,10 +48,10 @@ func (u *User) CheckIfExistsUser(username string) (bool, error) {
 	return true, nil
 }
 
-func (u *User) GetOneUser(username string) (*User, error) {
+func (u *User) GetUserByUsername(username string) (*User, error) {
 	var user *User
 	condition := User{Username: username}
-	result := db.GormDB.Where(condition).First(&user)
+	result := ModelRepo.db.GormDB.Where(condition).First(&user)
 	if result.Error != nil {
 		return nil, result.Error
 	}
