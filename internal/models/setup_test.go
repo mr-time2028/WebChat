@@ -2,13 +2,13 @@ package models
 
 import (
 	"github.com/joho/godotenv"
-	"github.com/mr-time2028/WebChat/database"
+	"github.com/mr-time2028/WebChat/internal/database"
 	"log"
 	"os"
 	"testing"
 )
 
-var testModelRepo *ModelRepository
+var testModelRepo ModelRepository
 
 func addDefaultData() error {
 	var defaultUsers = []*User{
@@ -32,9 +32,9 @@ func setUpTest() {
 	if err != nil {
 		log.Fatal("setUpTest error while connect to the database: ", err.Error())
 	}
+	testModelRepo.db = testDB
 
-	testModelRepo = NewModelsRepository(testDB)
-	NewModels(testModelRepo)
+	NewModels(testDB)
 
 	err = AutoMigration()
 	if err != nil {
@@ -43,7 +43,7 @@ func setUpTest() {
 
 	err = addDefaultData()
 	if err != nil {
-		log.Fatal("addDefaultData error while adding default user(s) data to the database: ", err.Error())
+		log.Fatal("setUpTest error while adding default user(s) data to the database: ", err.Error())
 	}
 }
 

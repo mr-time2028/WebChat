@@ -4,9 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/mr-time2028/WebChat/internal/validators"
 	"net/http"
-
-	"github.com/mr-time2028/WebChat/validators"
 )
 
 // ReadJSON read request and extract request payload from it

@@ -2,7 +2,7 @@ package routes
 
 import (
 	"github.com/go-chi/chi/v5"
-	"github.com/mr-time2028/WebChat/handlers"
+	"github.com/mr-time2028/WebChat/internal/handlers"
 	"net/http"
 )
 

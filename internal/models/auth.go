@@ -4,10 +4,17 @@ import (
 	"errors"
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/mr-time2028/WebChat/helpers"
+	"github.com/mr-time2028/WebChat/internal/helpers"
 	"net/http"
 	"strings"
 	"time"
+)
+
+var (
+	ErrNoAuthHeader       = errors.New(`no auth header`)
+	ErrInvalidAuthHeader  = errors.New("invalid auth header")
+	ErrTokenInvalidIssuer = jwt.ErrTokenInvalidIssuer
+	ErrTokenExpired       = jwt.ErrTokenExpired
 )
 
 type Auth struct {
@@ -48,7 +55,7 @@ func NewJWTAuth() *Auth {
 	}
 }
 
-func (j *Auth) GenerateTokenPair(user *JwtUser) (TokenPairs, error) {
+func (a *Auth) GenerateTokenPair(user *JwtUser) (TokenPairs, error) {
 	// create a token
 	token := jwt.New(jwt.SigningMethodHS256)
 
@@ -56,16 +63,16 @@ func (j *Auth) GenerateTokenPair(user *JwtUser) (TokenPairs, error) {
 	claims := token.Claims.(jwt.MapClaims)
 	claims["name"] = fmt.Sprintf("%s", user.Username)
 	claims["sub"] = fmt.Sprint(user.ID)
-	claims["aud"] = j.Audience
-	claims["iss"] = j.Issuer
+	claims["aud"] = a.Audience
+	claims["iss"] = a.Issuer
 	claims["iat"] = time.Now().UTC().Unix()
 	claims["typ"] = "JWT"
 
 	// set the expiry for JWT
-	claims["exp"] = time.Now().UTC().Add(j.TokenExpiry).Unix()
+	claims["exp"] = time.Now().UTC().Add(a.TokenExpiry).Unix()
 
 	// create a signed token
-	signedAccessToken, err := token.SignedString([]byte(j.Secret))
+	signedAccessToken, err := token.SignedString([]byte(a.Secret))
 	if err != nil {
 		return TokenPairs{}, err
 	}
@@ -77,10 +84,10 @@ func (j *Auth) GenerateTokenPair(user *JwtUser) (TokenPairs, error) {
 	refreshTokenClaims["iat"] = time.Now().UTC().Unix()
 
 	// set the expiry for refresh token
-	refreshTokenClaims["exp"] = time.Now().UTC().Add(j.RefreshExpiry).Unix()
+	refreshTokenClaims["exp"] = time.Now().UTC().Add(a.RefreshExpiry).Unix()
 
 	// create signed refresh token
-	signedRefreshToken, err := refreshToken.SignedString([]byte(j.Secret))
+	signedRefreshToken, err := refreshToken.SignedString([]byte(a.Secret))
 	if err != nil {
 		return TokenPairs{}, err
 	}
@@ -95,26 +102,30 @@ func (j *Auth) GenerateTokenPair(user *JwtUser) (TokenPairs, error) {
 	return tokenPairs, nil
 }
 
-func (j *Auth) GetTokenFromHeaderAndVerify(w http.ResponseWriter, r *http.Request) (string, *Claims, error) {
+func (a *Auth) GetAuthTokenFromHeader(w http.ResponseWriter, r *http.Request) (string, error) {
 	w.Header().Add("Vary", "Authorization")
 
 	// get auth header
-	authHeader := r.Header.Get("Authorization")
+	authToken := r.Header.Get("Authorization")
 
 	// sanity check
-	if authHeader == "" {
-		return "", nil, errors.New("no auth header")
+	if authToken == "" {
+		return "", ErrNoAuthHeader
 	}
 
+	return authToken, nil
+}
+
+func (a *Auth) VerifyAuthToken(authToken string) (*Claims, error) {
 	// split the header on spaces
-	headerParts := strings.Split(authHeader, " ")
+	headerParts := strings.Split(authToken, " ")
 	if len(headerParts) != 2 {
-		return "", nil, errors.New("invalid auth header")
+		return nil, ErrInvalidAuthHeader
 	}
 
 	// check if we have the word "Bearer"
 	if headerParts[0] != "Bearer" {
-		return "", nil, errors.New("invalid auth header")
+		return nil, ErrInvalidAuthHeader
 	}
 	token := headerParts[1]
 
@@ -126,46 +137,23 @@ func (j *Auth) GetTokenFromHeaderAndVerify(w http.ResponseWriter, r *http.Reques
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return []byte(j.Secret), nil
+		return []byte(a.Secret), nil
 	})
 
 	if err != nil {
 		if strings.HasPrefix(err.Error(), "token is expired by") {
-			return "", nil, errors.New("expired token")
-		}
-		return "", nil, err
-	}
-
-	if claims.Issuer != j.Issuer {
-		return "", nil, errors.New("invalid issuer")
-	}
-
-	// check expiration time
-	if claims.ExpiresAt.Before(time.Now()) {
-		return "", nil, errors.New("token has expired")
-	}
-
-	return token, claims, nil
-}
-
-// ParseWithClaims parse jwt using secret key
-func (a *Auth) ParseWithClaims(token string) (*Claims, error) {
-	claims := &Claims{}
-	_, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
-		return []byte(a.Secret), nil
-	})
-	if err != nil {
-		if strings.Contains(err.Error(), "token is expired") {
-			return nil, errors.New("token has expired")
+			return nil, ErrTokenExpired
 		}
 		return nil, err
 	}
 
 	if claims.Issuer != a.Issuer {
-		return nil, errors.New("invalid issuer")
+		return nil, ErrTokenInvalidIssuer
+	}
+
+	// check expiration time
+	if claims.ExpiresAt.Before(time.Now()) {
+		return nil, ErrTokenExpired
 	}
 
 	return claims, nil

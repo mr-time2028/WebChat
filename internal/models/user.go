@@ -57,3 +57,13 @@ func (u *User) GetUserByUsername(username string) (*User, error) {
 	}
 	return user, nil
 }
+
+func (u *User) GetUserByID(id uuid.UUID) (*User, error) {
+	var user *User
+	condition := User{ID: id}
+	result := ModelRepo.db.GormDB.Where(condition).First(&user)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return user, nil
+}

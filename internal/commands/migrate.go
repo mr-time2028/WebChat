@@ -2,8 +2,8 @@ package commands
 
 import (
 	"fmt"
-	"github.com/mr-time2028/WebChat/database"
-	"github.com/mr-time2028/WebChat/models"
+	"github.com/mr-time2028/WebChat/internal/database"
+	"github.com/mr-time2028/WebChat/internal/models"
 	"log"
 	"reflect"
 )

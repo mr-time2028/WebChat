@@ -10,6 +10,7 @@ type UserInterface interface {
 	InsertOneUser(user *User) (uuid.UUID, error)
 	CheckIfExistsUser(username string) (bool, error)
 	GetUserByUsername(username string) (*User, error)
+	GetUserByID(id uuid.UUID) (*User, error)
 }
 
 type RoomInterface interface {

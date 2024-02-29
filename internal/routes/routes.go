@@ -12,7 +12,7 @@ func Routes() http.Handler {
 	mux.Mount("/", WsRoutes())
 	mux.Mount("/users", UserRoutes())
 
-	fileServer := http.FileServer(http.Dir("./web/static/"))
+	fileServer := http.FileServer(http.Dir("./web/static/")) // path from root level of the project
 	mux.Handle("/web/static/*", http.StripPrefix("/web/static", fileServer))
 
 	return mux

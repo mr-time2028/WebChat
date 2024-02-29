@@ -3,9 +3,9 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"github.com/mr-time2028/WebChat/internal/helpers"
 	"time"
 
-	"github.com/mr-time2028/WebChat/helpers"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
