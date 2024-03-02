@@ -22,10 +22,10 @@ func (h *HandlerRepository) ServeWs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go h.ParseWsRequest(conn)
+	go h.ReadMessage(conn)
 }
 
-func (h *HandlerRepository) ParseWsRequest(conn *websocket.Conn) {
+func (h *HandlerRepository) ReadMessage(conn *websocket.Conn) {
 	defer func() {
 		_ = conn.Close()
 	}()
@@ -35,11 +35,14 @@ func (h *HandlerRepository) ParseWsRequest(conn *websocket.Conn) {
 		err := conn.ReadJSON(&wsRequest)
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Println("error reading message: ", err)
+				log.Printf("error: %v", err)
 			}
 			break
 		} else {
-			client := models.Client{Conn: conn}
+			client := models.Client{
+				Hub:  h.App.Hub,
+				Conn: conn,
+			}
 			wsRequest.Client = &client
 			h.App.Hub.RequestChan <- wsRequest
 		}
@@ -48,36 +51,40 @@ func (h *HandlerRepository) ParseWsRequest(conn *websocket.Conn) {
 
 func (h *HandlerRepository) WsBroker() {
 	for {
-		clientRequest := <-h.App.Hub.RequestChan
-		switch clientRequest.Action {
+		cr := <-h.App.Hub.RequestChan
+		switch cr.Action {
 		case "auth":
-			h.Authenticate(&clientRequest)
+			ok := h.Authenticate(&cr)
+			if !ok {
+				_ = cr.Client.Conn.Close()
+			}
+		case "left":
+			h.App.Hub.RemoveClient(cr.Client.Conn)
 		default:
 			wsResponse := &models.WsResponse{
 				Error:   true,
 				Status:  http.StatusBadRequest,
 				Message: "invalid action",
 			}
-			_ = clientRequest.Client.WriteJSON(wsResponse)
-			_ = clientRequest.Client.Close()
+			_ = cr.Client.Conn.WriteJSON(wsResponse)
+			_ = cr.Client.Conn.Close()
 		}
 	}
 }
 
-func (h *HandlerRepository) Authenticate(clientRequest *models.WsRequest) {
+func (h *HandlerRepository) Authenticate(cr *models.WsRequest) bool {
 	wsResponse := &models.WsResponse{
-		Action: clientRequest.Action,
+		Action: cr.Action,
 	}
 
 	// validate auth token
-	claims, err := h.App.Auth.VerifyAuthToken(clientRequest.Authorization)
+	claims, err := h.App.Auth.VerifyAuthToken(cr.Token)
 	if err != nil {
 		wsResponse.Error = true
 		wsResponse.Status = http.StatusUnauthorized
 		wsResponse.Message = "token is invalid or expired"
-		_ = clientRequest.Client.WriteJSON(wsResponse)
-		_ = clientRequest.Client.Close()
-		return
+		_ = cr.Client.Conn.WriteJSON(wsResponse)
+		return false
 	}
 
 	// get user from database
@@ -86,9 +93,8 @@ func (h *HandlerRepository) Authenticate(clientRequest *models.WsRequest) {
 		wsResponse.Error = true
 		wsResponse.Status = http.StatusInternalServerError
 		wsResponse.Message = "internal server error"
-		_ = clientRequest.Client.WriteJSON(wsResponse)
-		_ = clientRequest.Client.Close()
-		return
+		_ = cr.Client.Conn.WriteJSON(wsResponse)
+		return false
 	}
 
 	user, err := h.App.Models.User.GetUserByID(parsedUUID)
@@ -96,14 +102,15 @@ func (h *HandlerRepository) Authenticate(clientRequest *models.WsRequest) {
 		wsResponse.Error = true
 		wsResponse.Status = http.StatusUnauthorized
 		wsResponse.Message = "invalid user credentials"
-		_ = clientRequest.Client.WriteJSON(wsResponse)
-		_ = clientRequest.Client.Close()
-		return
+		_ = cr.Client.Conn.WriteJSON(wsResponse)
+		return false
 	}
 
-	h.App.Hub.AddClient(clientRequest.Client, user)
+	h.App.Hub.AddClient(cr.Client.Conn, user)
+	wsResponse.ConnectedUsers = h.App.Hub.GetConnectedUsers()
 	wsResponse.Error = false
 	wsResponse.Status = http.StatusOK
 	wsResponse.Message = "user authenticated successfully"
-	_ = clientRequest.Client.WriteJSON(wsResponse)
+	_ = cr.Client.Conn.WriteJSON(wsResponse)
+	return true
 }
