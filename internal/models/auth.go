@@ -11,10 +11,9 @@ import (
 )
 
 var (
-	ErrNoAuthHeader       = errors.New(`no auth header`)
-	ErrInvalidAuthHeader  = errors.New("invalid auth header")
-	ErrTokenInvalidIssuer = jwt.ErrTokenInvalidIssuer
-	ErrTokenExpired       = jwt.ErrTokenExpired
+	ErrNoAuthHeader      = errors.New(`no auth header`)
+	ErrInvalidAuthHeader = errors.New("invalid auth header")
+	ErrInvalidToken      = errors.New("invalid token")
 )
 
 type Auth struct {
@@ -135,25 +134,25 @@ func (a *Auth) VerifyAuthToken(authToken string) (*Claims, error) {
 	// parse the token
 	_, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			return nil, jwt.ErrTokenSignatureInvalid
 		}
 		return []byte(a.Secret), nil
 	})
 
 	if err != nil {
 		if strings.HasPrefix(err.Error(), "token is expired by") {
-			return nil, ErrTokenExpired
+			return nil, jwt.ErrTokenExpired
 		}
-		return nil, err
+		return nil, ErrInvalidToken
 	}
 
 	if claims.Issuer != a.Issuer {
-		return nil, ErrTokenInvalidIssuer
+		return nil, jwt.ErrTokenInvalidIssuer
 	}
 
 	// check expiration time
 	if claims.ExpiresAt.Before(time.Now()) {
-		return nil, ErrTokenExpired
+		return nil, jwt.ErrTokenExpired
 	}
 
 	return claims, nil

@@ -10,7 +10,7 @@ func WsRoutes() http.Handler {
 	mux := chi.NewRouter()
 
 	mux.Get("/", handlers.HandlerRepo.Home)
-	mux.Get("/ws", handlers.HandlerRepo.WsEndpoint)
+	mux.Get("/ws", handlers.HandlerRepo.ServeWs)
 
 	return mux
 }

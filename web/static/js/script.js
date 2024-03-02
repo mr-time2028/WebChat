@@ -10,9 +10,8 @@ document.addEventListener("DOMContentLoaded", function() {
     socket.onopen = () => {
         console.log("authenticating");
         // Send the authentication token as the first message
-        const token = 'Bearer dafdasgj';
         let jsonData = {
-            authorization: token,
+            authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJsb2NhbGhvc3QiLCJleHAiOjE3MDkzMTczMzMsImlhdCI6MTcwOTMxNzAzMywiaXNzIjoibG9jYWxob3N0IiwibmFtZSI6Ik1yVGltZSIsInN1YiI6ImY5MGMxNTE5LTA5YTUtNDMwNi1iMTMzLTAxMDkxODk4MDNmYyIsInR5cCI6IkpXVCJ9.4QqM4fT_jQPypb68ctJvvod3HOjJPZkpzixP06TNeEg",
             action: "auth",
             username: "MrTime",
         };
