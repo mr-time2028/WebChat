@@ -14,7 +14,4 @@ func NewHandlers(a *config.App) {
 	HandlerRepo = &HandlerRepository{
 		App: a,
 	}
-
-	// start ws listener (broker/gateway)
-	go HandlerRepo.WsBroker()
 }

@@ -51,6 +51,10 @@ func Run(app *config.App) error {
 	log.Println("connected to the database successfully!")
 	app.DB = DB
 
+	// initial models
+	models.NewModels(DB)
+	app.Models = models.NewModelManager()
+
 	// initial JWT
 	auth := models.NewJWTAuth()
 	app.Auth = auth
@@ -59,19 +63,33 @@ func Run(app *config.App) error {
 	hub := models.NewHub()
 	app.Hub = hub
 
-	// initial models
-	models.NewModels(DB)
-	app.Models = models.NewModelManager()
+	// get rooms and put them in hub (it prevent fetch rooms each time from the database)
+	rooms, err := app.Models.Room.GetAllRooms()
+	if err != nil {
+		log.Fatal("failed to get all rooms", err)
+	}
+
+	for _, room := range rooms {
+		// it does not need to create a Clients map for this room, because memory efficiency
+		// we create Clients map for a room when a client want to join to this room
+		hub.Rooms[room.ID] = room
+	}
+
+	// run hub handler/broker
+	go hub.Run()
 
 	// initial handlers
 	handlers.NewHandlers(app)
 
-	// graceful shutdown
+	// initial routes
+	routes.NewRoutes(app)
+
+	// run graceful shutdown
 	go app.ListenForShutdown()
 
 	// start application
 	log.Println("application running on port", app.HTTPPort)
-	err = http.ListenAndServe(fmt.Sprintf(":%s", app.HTTPPort), routes.Routes())
+	err = http.ListenAndServe(fmt.Sprintf(":%s", app.HTTPPort), routes.RouteRepo.Routes())
 	if err != nil {
 		return err
 	}

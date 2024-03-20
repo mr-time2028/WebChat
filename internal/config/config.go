@@ -30,7 +30,9 @@ func (a *App) ListenForShutdown() {
 
 func (a *App) Shutdown() {
 	log.Println("cleanup tasks...")
-	close(a.Hub.RequestChan)
-	close(a.Hub.ResponseChan)
+	close(a.Hub.Register)
+	close(a.Hub.Unregister)
+	close(a.Hub.Broadcast)
+
 	log.Println("server shutdown gracefully")
 }

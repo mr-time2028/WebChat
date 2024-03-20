@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func UserRoutes() http.Handler {
+func (r *RouteRepository) UserRoutes() http.Handler {
 	mux := chi.NewRouter()
 
 	mux.Post("/register", handlers.HandlerRepo.Register)

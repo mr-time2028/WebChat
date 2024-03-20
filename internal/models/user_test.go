@@ -1,7 +1,6 @@
 package models
 
 import (
-	"github.com/google/uuid"
 	"testing"
 )
 
@@ -32,7 +31,7 @@ func TestUser_InsertOneUser(t *testing.T) {
 			// validation
 			if tc.expectedErr && err == nil || !tc.expectedErr && err != nil {
 				t.Errorf("unexpected error: expectedErr is %v, err is %s", tc.expectedErr, err.Error())
-			} else if err == nil && userID == uuid.Nil {
+			} else if err == nil && userID == "" {
 				t.Errorf("expected a notnil uuid user id, but it is nil uuid")
 			}
 

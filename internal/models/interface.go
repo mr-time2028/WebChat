@@ -1,19 +1,20 @@
 package models
 
 import (
-	"github.com/google/uuid"
 	"log"
 	"reflect"
 )
 
 type UserInterface interface {
-	InsertOneUser(user *User) (uuid.UUID, error)
+	InsertOneUser(user *User) (string, error)
 	CheckIfExistsUser(username string) (bool, error)
 	GetUserByUsername(username string) (*User, error)
-	GetUserByID(id uuid.UUID) (*User, error)
+	GetUserByID(id string) (*User, error)
 }
 
 type RoomInterface interface {
+	GetAllRooms() ([]*Room, error)
+	InsertOneRoom(room *Room) (string, error)
 }
 
 type MessageInterface interface {

@@ -2,17 +2,16 @@ package models
 
 import (
 	"errors"
-	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
 type User struct {
 	gorm.Model
-	ID       uuid.UUID `gorm:"primaryKey;type:uuid;default:uuid_generate_v4()" json:"id"`
-	Username string    `gorm:"size:30;uniqueIndex;not null" json:"username"`
-	IsActive bool      `gorm:"not null" json:"is_active"`
-	Password string    `gorm:"size:60;not null" json:"password"`
+	ID       string `gorm:"primaryKey;type:uuid;default:uuid_generate_v4()" json:"id"`
+	Username string `gorm:"size:30;uniqueIndex;not null" json:"username"`
+	IsActive bool   `gorm:"not null" json:"is_active"`
+	Password string `gorm:"size:60;not null" json:"password"`
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) error {
@@ -26,10 +25,10 @@ func (u *User) BeforeCreate(tx *gorm.DB) error {
 }
 
 // InsertOneUser insert one user to the database
-func (u *User) InsertOneUser(user *User) (uuid.UUID, error) {
+func (u *User) InsertOneUser(user *User) (string, error) {
 	result := ModelRepo.db.GormDB.Create(user)
 	if result.Error != nil {
-		return uuid.Nil, result.Error
+		return "", result.Error
 	}
 	return user.ID, nil
 }
@@ -58,7 +57,7 @@ func (u *User) GetUserByUsername(username string) (*User, error) {
 	return user, nil
 }
 
-func (u *User) GetUserByID(id uuid.UUID) (*User, error) {
+func (u *User) GetUserByID(id string) (*User, error) {
 	var user *User
 	condition := User{ID: id}
 	result := ModelRepo.db.GormDB.Where(condition).First(&user)

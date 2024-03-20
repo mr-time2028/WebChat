@@ -11,23 +11,20 @@ window.onbeforeunload = function() {
 }
 
 document.addEventListener("DOMContentLoaded", function() {
-    socket = new ReconnectingWebSocket("ws://127.0.0.1:8000/ws", null, {debug: true, reconnectInterval: 3000})
+    socket = new ReconnectingWebSocket("ws://127.0.0.1:8000/join_room", null, {debug: true, reconnectInterval: 3000})
     // socket = new WebSocket("ws://127.0.0.1:8000/ws", ["json"])
 
     socket.onopen = () => {
-        console.log("authenticating");
-        // Send the authentication token as the first message
-        let jsonData = {
-            authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJsb2NhbGhvc3QiLCJleHAiOjE3MDk0MDA1NzgsImlhdCI6MTcwOTQwMDI3OCwiaXNzIjoibG9jYWxob3N0IiwibmFtZSI6Ik1yVGltZSIsInN1YiI6ImY5MGMxNTE5LTA5YTUtNDMwNi1iMTMzLTAxMDkxODk4MDNmYyIsInR5cCI6IkpXVCJ9.kKkxXi2nd7H9OYyKmkyfVUBIXR4DdbKZ2x5Qohrvn7s",
-            action: "auth",
-        };
-        socket.send(JSON.stringify(jsonData));
+        const payload = {
+            token: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJsb2NhbGhvc3QiLCJleHAiOjE3MTA5NTU0MjYsImlhdCI6MTcxMDk1NTEyNiwiaXNzIjoibG9jYWxob3N0IiwibmFtZSI6Ik1yVGltZSIsInN1YiI6IjVjZTJmZjcwLTU1N2EtNDI1ZS04ZTExLWU2YzBlNjk5MzMxMCIsInR5cCI6IkpXVCJ9.TwLADIOkvnbfyWcmSwmy0arHhiN8-8JWySTk8f0SDic",
+            room_id: "d864ae89-c6b0-4899-b0f7-4eddce3c53af"
+        }
+
+        socket.send(JSON.stringify(payload));
     };
 
     socket.onmessage = msg => {
-        data = JSON.parse(msg.data)
-        console.log(data.message)
-        console.log(data.action)
-        console.log(data.connected_users)
+        let data = JSON.parse(msg.data)
+        console.log(data)
     }
 })

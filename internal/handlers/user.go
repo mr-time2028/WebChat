@@ -27,7 +27,7 @@ func (h *HandlerRepository) Register(w http.ResponseWriter, r *http.Request) {
 	if validator := helpers.ReadJSON(w, r, &requestBody); !validator.Valid() {
 		if err := helpers.ErrorMapJSON(w, validator.Errors); err != nil {
 			log.Println(err)
-			http.Error(w, "internal config error", http.StatusInternalServerError)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
 		}
 		return
 	}
@@ -41,7 +41,7 @@ func (h *HandlerRepository) Register(w http.ResponseWriter, r *http.Request) {
 	if !validator.Valid() {
 		if err := helpers.ErrorMapJSON(w, validator.Errors); err != nil {
 			log.Println(err)
-			http.Error(w, "internal config error", http.StatusInternalServerError)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
 		}
 		return
 	}
@@ -50,14 +50,14 @@ func (h *HandlerRepository) Register(w http.ResponseWriter, r *http.Request) {
 	isExistsUser, err := h.App.Models.User.CheckIfExistsUser(requestBody.Username)
 	if err != nil {
 		log.Println(err)
-		http.Error(w, "internal config error", http.StatusInternalServerError)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
 	if isExistsUser {
 		if err = helpers.ErrorStrJSON(w, errors.New("user with this username already exists")); err != nil {
 			log.Println(err)
-			http.Error(w, "internal config error", http.StatusInternalServerError)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
 		}
 		return
 	}
@@ -72,7 +72,7 @@ func (h *HandlerRepository) Register(w http.ResponseWriter, r *http.Request) {
 	_, err = h.App.Models.User.InsertOneUser(user)
 	if err != nil {
 		log.Println(err)
-		http.Error(w, "internal config error", http.StatusInternalServerError)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -81,7 +81,7 @@ func (h *HandlerRepository) Register(w http.ResponseWriter, r *http.Request) {
 	responseBody.Message = "registration was successful"
 	if err = helpers.WriteJSON(w, http.StatusOK, responseBody); err != nil {
 		log.Println(err)
-		http.Error(w, "internal config error", http.StatusInternalServerError)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 }
@@ -101,7 +101,7 @@ func (h *HandlerRepository) Login(w http.ResponseWriter, r *http.Request) {
 	if validator := helpers.ReadJSON(w, r, &requestBody); !validator.Valid() {
 		if err := helpers.ErrorMapJSON(w, validator.Errors); err != nil {
 			log.Println(err)
-			http.Error(w, "internal config error", http.StatusInternalServerError)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
 		}
 		return
 	}
@@ -116,7 +116,7 @@ func (h *HandlerRepository) Login(w http.ResponseWriter, r *http.Request) {
 			}
 		default:
 			log.Println(err)
-			http.Error(w, "internal config error", http.StatusInternalServerError)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
 		}
 		return
 	}
@@ -127,23 +127,17 @@ func (h *HandlerRepository) Login(w http.ResponseWriter, r *http.Request) {
 	if !validator.Valid() {
 		if err = helpers.ErrorStrJSON(w, errors.New("incorrect email or password"), validator.Errors.Code); err != nil {
 			log.Println(err)
-			http.Error(w, "internal config error", http.StatusInternalServerError)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
 		}
 		return
 	}
 
 	// generate tokens for user
-	uuidValue, err := user.ID.Value()
-	if err != nil {
-		log.Println(err)
-		http.Error(w, "internal config error", http.StatusInternalServerError)
-		return
-	}
-	u := models.JwtUser{ID: fmt.Sprintf("%v", uuidValue), Username: user.Username}
+	u := models.JwtUser{ID: fmt.Sprintf("%v", user.ID), Username: user.Username}
 	tokens, err := h.App.Auth.GenerateTokenPair(&u)
 	if err != nil {
 		log.Println(err)
-		http.Error(w, "internal config error", http.StatusInternalServerError)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -152,7 +146,7 @@ func (h *HandlerRepository) Login(w http.ResponseWriter, r *http.Request) {
 	responseBody.Tokens = tokens
 	if err = helpers.WriteJSON(w, http.StatusOK, responseBody); err != nil {
 		log.Println(err)
-		http.Error(w, "internal config error", http.StatusInternalServerError)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 }
